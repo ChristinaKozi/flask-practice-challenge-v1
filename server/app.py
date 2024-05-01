@@ -2,7 +2,6 @@ from config import app, api
 from models import Post, Comment
 from flask_restful import Resource
 from flask import make_response, jsonify
-from sqlalchemy import desc
 
 # create routes here:
 class SortedPosts(Resource):
@@ -35,16 +34,14 @@ class PostsByTitle(Resource):
     
 api.add_resource(PostsByTitle, '/api/search_posts/<title>')
 
-# class PostsByComments(Resource):
-#   def get(self):
-#     posts = Post.query.filter(Post.id==Comment.post_id).order_by(desc(Post.comments)).all()
-#     if posts:
-#       posts_dict = [post.to_dict() for post in posts]
-#       return make_response(posts_dict, 200)
-      
-#     return make_response({'error':'not found'}, 404)
+class PostsByComments(Resource):
+  def get(self):
+    posts = Post.query.all()
+    # take in an argument and do something (like the arrow function)
+    posts.sort(reverse=True, key=lambda post:len(post.comments))
+    return [post.to_dict() for post in posts]
 
-# api.add_resource(PostsByComments, '/api/posts_ordered_by_comments')
+api.add_resource(PostsByComments, '/api/posts_ordered_by_comments')
 
 class MostPopularCommenter(Resource):
   def get(self):
@@ -62,7 +59,7 @@ class MostPopularCommenter(Resource):
       for key, value in names.items():
         if value == most_comments:
           most_popular_commenter = key
-          
+
       return make_response(jsonify({'commenter': most_popular_commenter}), 200)
     
     return make_response({'error':'not found'}, 404)
